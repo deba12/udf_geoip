@@ -165,13 +165,7 @@ static my_bool check_args_country(const char *funcname,
 	return 1;
     }
 
-    if ((data->gi_city = GeoIP_open(GEOIP_DATA_PATH "GeoIPCity.dat",
-				    GEOIP_STANDARD)) == NULL)
-    {
-	strcpy(msg, "Couldn't open GeoIPCity.dat");
-	return 1;
-    }
-
+    data->gi_city = GeoIP_open(GEOIP_DATA_PATH "GeoIPCity.dat", GEOIP_STANDARD);
     initid->ptr = (void *)data;
 
     return 0;
@@ -366,7 +360,7 @@ char *geoip_country_code(UDF_INIT *initid, UDF_ARGS *args, char *result,
 	char ipstr[16];
 	COPY_IPSTR(ipstr, args->args[0], args->lengths[0], NULL);
 	country_code = GeoIP_country_code_by_addr(data->gi_country, ipstr);
-	if (country_code == NULL)
+	if ((country_code == NULL) && (data->gi_city != NULL))
 	{
 	    GeoIPRecord *gir;
 	    if ((gir = GeoIP_record_by_addr(data->gi_city, ipstr)) != NULL)
@@ -379,7 +373,7 @@ char *geoip_country_code(UDF_INIT *initid, UDF_ARGS *args, char *result,
     else /* args->arg_type[0] == INT_RESULT */
     {
 	country_code = GeoIP_country_code_by_ipnum(data->gi_country, *((long long *) args->args[0]));
-	if (country_code == NULL)
+	if ((country_code == NULL) && (data->gi_city != NULL))
 	{
 	    GeoIPRecord *gir;
 	    if ((gir = GeoIP_record_by_ipnum(data->gi_city, *((long long *) args->args[0]))) != NULL)
@@ -426,7 +420,7 @@ char *geoip_country_name(UDF_INIT *initid, UDF_ARGS *args, char *result,
 	char ipstr[16];
 	COPY_IPSTR(ipstr, args->args[0], args->lengths[0], NULL);
 	country_name = GeoIP_country_name_by_addr(data->gi_country, ipstr);
-	if (country_name == NULL)
+	if ((country_name == NULL) && (data->gi_city != NULL))
 	{
 	    GeoIPRecord *gir;
 	    if ((gir = GeoIP_record_by_addr(data->gi_city, args->args[0])) != NULL)
@@ -439,7 +433,7 @@ char *geoip_country_name(UDF_INIT *initid, UDF_ARGS *args, char *result,
     else /* args->arg_type[0] == INT_RESULT */
     {
 	country_name = GeoIP_country_name_by_ipnum(data->gi_country, *((long long *) args->args[0]));
-	if (country_name == NULL)
+	if ((country_name == NULL)  && (data->gi_city != NULL))
 	{
 	    GeoIPRecord *gir;
 	    if ((gir = GeoIP_record_by_ipnum(data->gi_city, *((long long *) args->args[0]))) != NULL)
